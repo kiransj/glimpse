@@ -17,13 +17,18 @@ KERNEL := kernel.bin
 all: $(KERNEL)
 
 $(KERNEL):$(OBJECTS)
-	$(LD) -T asm/linker.ld -o $(KERNEL) $(OBJECTS)
+	$(info building $(KERNEL))		
+	@$(LD) -T asm/linker.ld -o $(KERNEL) $(OBJECTS)
 
 %.o:%.s
-	$(ASSEMBLER) -f elf -o $@  $^ 
+	$(info building $@)
+	@$(ASSEMBLER) -f elf -o $@  $^ 
 
 %.o:%.c
-	$(CC) $(INCLUDES) -o $@ -c $^ $(CFLAGS) 
+	$(info building $@)
+	@$(CC) $(INCLUDES) -o $@ -c $^ $(CFLAGS) 
 
 clean:
 	rm -f $(OBJECTS) $(KERNEL)
+run:	
+	qemu -no-kvm -kernel $(KERNEL)

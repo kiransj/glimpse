@@ -5,8 +5,13 @@
 
 typedef unsigned int uint32_t;
 typedef unsigned char uint8_t;
+typedef unsigned short int uint16_t;
 
 #define NULL    '\0'
+
+void outb(uint16_t port, uint8_t value);
+uint8_t inb(uint16_t port);
+uint16_t inw(uint16_t port);
 
 void memset(void *buffer, uint8_t ch, uint32_t size);
 #endif

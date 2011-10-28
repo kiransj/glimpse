@@ -1,9 +1,12 @@
 #include <util.h>
 #include <display.h>
-
+#include <descriptor_tables.h>
 int kernel_main(void)
-{    
-    printf("first %c %s:%u:%d", '>', "printf", 1000, -41234);
+{  
+    printf("\n\n --------> IN Main <-----------\n");
+
+    asm volatile ("int $0x3");
+    asm volatile ("int $0x4");
     return 0;
 }
 
@@ -12,6 +15,9 @@ void kernel_entry( void* mbd, unsigned int magic )
    UNUSED_PARAMETER(mbd);
 
    clear_screen(); 
+
+   init_descriptor_tables();
+   
    if ( magic != 0x2BADB002 )
    {
       /* Something went not according to specs. Print an error */
