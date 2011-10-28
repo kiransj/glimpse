@@ -1,12 +1,11 @@
 #include <util.h>
 #include <display.h>
 #include <descriptor_tables.h>
+#include <timer.h>
 int kernel_main(void)
 {  
-    printf("\n\n --------> IN Main <-----------\n");
+    printf("\n\n --------> IN Main <----------- %d\n", 0);
 
-    asm volatile ("int $0x3");
-    asm volatile ("int $0x4");
     return 0;
 }
 
@@ -26,6 +25,9 @@ void kernel_entry( void* mbd, unsigned int magic )
        printf("\nMagic Number did not match :( !!!");
        return;
    }    
-
+   asm volatile ("int $0x3");
+   asm volatile ("int $0x4");
+   asm volatile("sti");
+   init_timer(10000);
    kernel_main();
 }

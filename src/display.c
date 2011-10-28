@@ -79,11 +79,13 @@ void print_uint32(uint32_t num)
 {
     uint32_t tmp = num, i = 0;
     char number[32] = { NULL };
-    while(0 != tmp)
+    do
     {
         number[i++] = '0' + tmp%10;
         tmp = tmp  / 10;
     }
+    while(0 != tmp);
+
     i--;
     while(i > 0)
     {

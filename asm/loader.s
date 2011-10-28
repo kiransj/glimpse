@@ -23,9 +23,9 @@ loader:
     mov  esp, stack + STACKSIZE         ; set up the stack
     push eax                            ; Multiboot magic number
     push ebx                            ; Multiboot info structure
- 
+    cli 
     call kernel_entry                          ; call kernel proper
- 
+    jmp $ 
     cli
 .hang:
     hlt                                 ; halt machine should kernel return
