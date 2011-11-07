@@ -9,7 +9,7 @@ OBJECTS += $(C_SOURCES:.c=.o)
 
 INCLUDES := -I./inc
 
-CFLAGS := -Wall -Wextra -Werror -nostdlib
+CFLAGS := -Wall -Wextra  -nostdlib
 CFLAGS += -fno-builtin -nostartfiles -nodefaultlibs
 
 KERNEL := kernel.bin
