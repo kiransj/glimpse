@@ -2,6 +2,7 @@
 
 static void setToZero(void *buffer, uint32_t size)
 {
+    FN_ENTRY();
     uint32_t tmp_size = size >> 2;
     uint32_t remaining_bytes = size & 0x03;
     if(tmp_size != 0)
@@ -22,6 +23,7 @@ static void setToZero(void *buffer, uint32_t size)
             buf[i] = 0;
         }
     }
+    FN_EXIT();
 }
 
 void memset(void *buffer, uint8_t ch, uint32_t size)

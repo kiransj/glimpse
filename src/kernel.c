@@ -16,68 +16,6 @@ int kernel_main(void)
     return 0;
 }
 
-
-
-extern uint32_t end;
-
-void page_fault_1(registers_t regs)
-{
-    printf("\nPage fault");
-
-    while(1);
-}
-
-uint32_t switch_pd(uint32_t dir)
-{
-	uint32_t cr3;
-
-    FN_ENTRY();
-	asm volatile("mov %%cr3, %%eax" : "=a"(cr3));
-	asm volatile("mov %%eax, %%cr3" :: "a"(dir));
-
-    FN_EXIT();
-	return cr3;    
-}
-
-void enable_paging(void)
-{
-	uint32_t cr0;
-    FN_ENTRY();
-	asm volatile("mov %%cr0, %%eax" : "=a"(cr0));
-	cr0 |= 0x80000000;
-    printf("\ncr0 : %x\n", cr0);
-	asm volatile("mov %%eax, %%cr0" :: "a"(cr0));
-    FN_EXIT();
-}
-void initialise_virtual_paging(void)
-{
-    uint32_t *page_directory;
-    uint32_t *page_table, i, address = 0;
-    uint32_t ram_offset = ((uint32_t)&end + 0x1000) & ~(0xFFF);
-
-    page_directory = (uint32_t*)ram_offset;
-    ram_offset += 0x1000;
-
-    page_table = (uint32_t*)ram_offset;
-    page_directory[0] = ram_offset | 0x3;
-    ram_offset += 0x1000;
-
-    for(i = 0, address = 0; i < 1024; i++)
-    {
-        page_table[i] = address | 0x3;
-        address += 0x1000;
-    }
-
-
-    for(i = 1; i < 1024; i++)
-    {
-        page_directory[i] = 0x2;
-    }
-
-    register_interrupt_handler(14, page_fault_1);
-    switch_pd((uint32_t)page_directory);
-    enable_paging();
-}
 struct memory_map
 {
     uint32_t size;
@@ -102,7 +40,7 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     uint32_t count = mbd->mmap_length/sizeof(struct memory_map), i;
     struct memory_map *map = (struct memory_map *)mbd->mmap_addr;
 
-    uint32_t total_size = 0;
+    uint32_t total_size = 0, ram_size;
     for(i =0 ; i < count; i++)
     {
         if(map[i].type == 1)
@@ -112,6 +50,8 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
                             map[i].base_length_low,
                             map[i].base_length_low>>10,
                             map[i].base_length_low>>20);
+            if(ram_size <map[i].base_length_low)
+                ram_size = map[i].base_length_low;
             total_size += map[i].base_length_low;            
         }        
     }
@@ -119,7 +59,7 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     asm volatile ("sti");    
 
     printf("\nTotal Ram Available : %d bytes (%d MB)\n", total_size, (total_size >> 20));
-    initialise_virtual_paging();    
+    initialise_virtual_paging(ram_size); 
     init_timer(500000);
     kernel_main();
     while(1);
