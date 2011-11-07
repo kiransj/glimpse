@@ -12,7 +12,7 @@ INCLUDES := -I./inc
 CFLAGS := -Wall -Wextra  -nostdlib
 CFLAGS += -fno-builtin -nostartfiles -nodefaultlibs
 
-KERNEL := kernel.bin
+KERNEL := output/kernel.bin
 
 all: $(KERNEL)
 
@@ -32,4 +32,4 @@ clean:
 	rm -f $(OBJECTS) $(KERNEL)
 
 run: $(KERNEL)
-	./update_image.sh && qemu -no-kvm -m 64  -fda floppy.img 
+	cd output && ./update_image.sh && qemu -no-kvm -m 64  -fda floppy.img 

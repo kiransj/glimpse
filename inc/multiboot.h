@@ -36,7 +36,7 @@ struct multiboot
     uint32_t addr;
     uint32_t shndx;
     uint32_t mmap_length;
-    uint32_t mmap_addr;
+    uint32_t mmap_addr; /*see struct memory_map*/
     uint32_t drives_length;
     uint32_t drives_addr;
     uint32_t config_table;
@@ -51,5 +51,13 @@ struct multiboot
 }  __attribute__((packed));
 
 typedef struct multiboot_header multiboot_header_t;
-
+struct memory_map
+{
+    uint32_t size;
+    uint32_t base_addr_low;
+    uint32_t base_addr_high;
+    uint32_t base_length_low;
+    uint32_t base_length_high;
+    uint32_t type;
+};
 #endif
