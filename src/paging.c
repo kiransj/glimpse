@@ -5,6 +5,7 @@
 #include "ram_manager.h"
 #include "paging.h"
 #include "util.h"
+#include "memory.h"
 
 PageDirectory currentDirectory, kernel_directory;
 uint32_t switch_pd(PageDirectory directory)
@@ -92,7 +93,7 @@ void PageDirectory_UnMapAddress(PageDirectory pd, uint32_t address)
     uint32_t page_number = (address >> 12) & 0x3FF;
     uint32_t page_table = (address >> 22) & 0x3FF;
 
-    if(pd[page_table] != 0x2)
+    if(pd[page_table] == 0x2)
     {
         LOG_WARN("trying to unmap addressi %x which is not allocated", address);
     }
@@ -109,11 +110,13 @@ uint32_t get_mapped_page(void)
     PageDirectory_MapAddress(currentDirectory, address, address);
     return address;
 }
+
 void free_mapped_page(uint32_t address)
 {
     PageDirectory_UnMapAddress(currentDirectory, address);
     free_page(address);
 }
+
 void initialise_virtual_paging(uint32_t ram_size)
 {    
     PageDirectory page_directory;
@@ -140,6 +143,7 @@ void initialise_virtual_paging(uint32_t ram_size)
     switch_pd(page_directory);    
     enable_paging();
 
+    malloc_initialize();
     return;
 }
 
