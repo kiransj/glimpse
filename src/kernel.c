@@ -11,14 +11,21 @@ int kernel_main(void)
     FN_ENTRY();
     LOG_INFO("\n\n --------> IN Main <----------- %d\n");
     LOG_INFO("lets access a unmapped region");
-    uint32_t *address =(uint32_t*)get_mapped_page(4096*2);
+    uint32_t *address =(uint32_t*)get_mapped_page(0x4000 * 2), i;
    
     LOG_INFO("address : %x",address);
+        
 
-    free_mapped_page(address);
+    for(i = 0; i < 0x2000; i++)
+    {
+        LOG_INFO("%x", i);
+        address[i] = 1;
+    }        
+
+
+    free_mapped_page(address);    
+    
     FN_EXIT();
- //   address[0] = 1;
-//    address[1] = 1;
     return 0;
 }
 
