@@ -14,5 +14,9 @@ uint8_t inb(uint16_t port);
 uint16_t inw(uint16_t port);
 
 void memset(void *buffer, uint8_t ch, uint32_t size);
+
+
+#define FN_ENTRY()      printf("%s() -->%s:%d\n", __func__, __FILE__, __LINE__)
+#define FN_EXIT()      printf("%s() <--%s:%d\n", __func__, __FILE__, __LINE__)
 #endif
 

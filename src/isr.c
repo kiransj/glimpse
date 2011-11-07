@@ -33,8 +33,6 @@ void irq_handler(registers_t regs)
     // Send an EOI (end of interrupt) signal to the PICs.
     // If this interrupt involved the slave.
     //
-
-//    printf("Received hardware interrupt: %u\n", regs.int_no);
     if (regs.int_no >= 40)
     {
         // Send reset signal to slave.
@@ -48,5 +46,4 @@ void irq_handler(registers_t regs)
         isr_t handler = interrupt_handlers[regs.int_no];
         handler(regs);
     }
-
 }

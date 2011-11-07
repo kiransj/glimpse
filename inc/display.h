@@ -1,6 +1,7 @@
 #ifndef _DISPLAY_H
 #define _DISPLAY_H
 
+#include <util.h>
 #include <stdarg.h>
 
 void clear_screen(void);

@@ -10,7 +10,7 @@ static uint32_t row = 0, col = 0;
 
 static void scroll(void);
 static uint32_t write_string(char *string);
-static void print_uint32(uint32_t tmp);
+static void print_uint32(uint32_t tmp, uint32_t base);
 
 
 void clear_screen(void)
@@ -75,14 +75,23 @@ uint32_t write_string(char *string)
 }
 
 
-void print_uint32(uint32_t num)
+void print_uint32(uint32_t num, uint32_t base)
 {
     uint32_t tmp = num, i = 0;
     char number[32] = { NULL };
     do
     {
-        number[i++] = '0' + tmp%10;
-        tmp = tmp  / 10;
+        uint32_t rem = tmp % base;
+        
+        if(rem < 10)            
+            number[i++] = '0' + rem;
+        else if(rem >= 10)
+            number[i++] = 'A' + (rem - 10);
+
+        if(16 ==base)
+            tmp = tmp >> 4;
+        else
+            tmp = tmp/base;
     }
     while(0 != tmp);
 
@@ -105,7 +114,7 @@ void print_int(int num)
         put_char('-');
         tmp = -tmp;
     }
-    print_uint32((uint32_t)tmp);
+    print_uint32((uint32_t)tmp, 10);
     return;
 }
 uint32_t printf(char *format, ...)
@@ -132,7 +141,16 @@ uint32_t printf(char *format, ...)
                     {
                         uint32_t tmp;
                         tmp = va_arg(ap, uint32_t);
-                        print_uint32(tmp);
+                        print_uint32(tmp, 10);
+                        break;
+                    }
+                case 'x':
+                    {
+                        uint32_t tmp;
+                        tmp = va_arg(ap, uint32_t);
+                        put_char('0');
+                        put_char('x');
+                        print_uint32(tmp, 16);
                         break;
                     }
                 case 's':

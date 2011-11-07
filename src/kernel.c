@@ -2,6 +2,10 @@
 #include <display.h>
 #include <descriptor_tables.h>
 #include <timer.h>
+#include <multiboot.h>
+#include <paging.h>
+
+#define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
 int kernel_main(void)
 {  
     printf("\n\n --------> IN Main <----------- %d\n", 0);
@@ -9,25 +13,48 @@ int kernel_main(void)
     return 0;
 }
 
-void kernel_entry( void* mbd, unsigned int magic )
+extern uint32_t end;
+
+struct memory_map
 {
-   UNUSED_PARAMETER(mbd);
+    uint32_t size;
+    uint32_t base_addr_low;
+    uint32_t base_addr_high;
+    uint32_t base_length_low;
+    uint32_t base_length_high;
+    uint32_t type;
+};
+void kernel_entry(struct multiboot *mbd, uint32_t esp)
+{
+    uint32_t current_stack = 0;
+    UNUSED_PARAMETER(mbd);
+    UNUSED_PARAMETER(esp);
+    clear_screen(); 
+    
+    init_descriptor_tables();    
 
-   clear_screen(); 
+    GET_ESP(current_stack);
 
-   init_descriptor_tables();
-   
-   if ( magic != 0x2BADB002 )
-   {
-      /* Something went not according to specs. Print an error */
-      /* message and halt, but do *not* rely on the multiboot */
-      /* data structure. */
-       printf("\nMagic Number did not match :( !!!");
-       return;
-   }    
-   asm volatile ("int $0x3");
-   asm volatile ("int $0x4");
-   asm volatile("sti");
-   init_timer(10000);
-   kernel_main();
+    printf("\nmem_lower : %x (%d KB), mem_upper : %x (%d KB)\n",mbd->mem_lower, mbd->mem_lower, mbd->mem_upper, mbd->mem_upper);
+    uint32_t count = mbd->mmap_length/sizeof(struct memory_map), i;
+    struct memory_map *map = (struct memory_map *)mbd->mmap_addr;
+
+    uint32_t total_size = 0;
+    for(i =0 ; i < count; i++)
+    {
+        if(map[i].type == 1)
+        {
+            printf("a_low:%x, size:bytes %d (%d KB) (%d MB)\n",
+                            map[i].base_addr_low,
+                            map[i].base_length_low,
+                            map[i].base_length_low>>10,
+                            map[i].base_length_low>>20);
+            total_size += map[i].base_length_low;            
+        }        
+    }
+    
+    printf("\nTotal Ram Available : %d bytes (%d MB)\n", total_size, (total_size >> 20));
+    init_timer(50);
+    kernel_main();
+    while(1);
 }
