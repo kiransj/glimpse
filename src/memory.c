@@ -16,7 +16,7 @@ struct list32
 };
 
 
-uint32_t allocate_block_32(struct list32 *root)
+static uint32_t allocate_block_32(struct list32 *root)
 {
     uint32_t i;
     uint8_t flag = 0xff;
@@ -43,7 +43,7 @@ uint32_t allocate_block_32(struct list32 *root)
     while(1);
 }
 
-void free_block_32(struct list32 *root, uint32_t address)
+static void free_block_32(struct list32 *root, uint32_t address)
 {
     uint32_t block = (address - (uint32_t)(&root->address))>>5;
     uint8_t idx, offset, flag = 1;
@@ -63,9 +63,10 @@ void free_block_32(struct list32 *root, uint32_t address)
 }
 
 struct list32 *root32;
-void malloc_initialize(void)
+
+/*address (of size One page) should be passed*/
+void malloc_initialize(uint32_t address)
 {
-    uint32_t address = get_mapped_page();
     LOG_INFO("sizeof(struct list) = %d\n", sizeof(struct list32));
 
     root32 = (struct list32 *)(address);
@@ -79,4 +80,14 @@ void malloc_initialize(void)
     free_block_32(root32, add);
 
     return ;
+}
+
+uint32_t allocate_block32(void)
+{
+    return allocate_block_32(root32);
+}
+
+void free_block32(uint32_t address)
+{
+    free_block_32(root32, address);
 }

@@ -7,11 +7,11 @@
 #include "util.h"
 #include "memory.h"
 
-PageDirectory currentDirectory, kernel_directory;
-uint32_t switch_pd(PageDirectory directory)
+Page_Directory currentDirectory, kernel_directory;
+uint32_t switch_pd(Page_Directory directory)
 {
 	uint32_t cr3;
-    uint32_t dir = (uint32_t)directory;    
+    uint32_t dir = (uint32_t)directory->pd;
     currentDirectory = directory;
 	asm volatile("mov %%cr3, %%eax" : "=a"(cr3));
 	asm volatile("mov %%eax, %%cr3" :: "a"(dir));
@@ -47,30 +47,33 @@ void enable_paging(void)
 
 void page_fault(registers_t regs);
 
-PageDirectory PageDirectory_Create(void)
+Page_Directory PageDirectory_Create(void)
 {
     uint32_t i =0 ;
-    PageDirectory pd;
-    pd = (PageDirectory)get_page();
-
+    Page_Directory PD = (Page_Directory)allocate_block32();
+    PD->pd = (PageDirectory)get_page();
+    PD->heap_allocate_address = PD->num_of_pages_freed = 0; 
     /*Assume page size is 4096*/
     for(i = 0; i < 1024; i++)
     {
         /*Set Not Preset bit*/
-        pd[i] = 0x2; 
+        PD->pd[i] = 0x2; 
     }
-    return pd;
+    return PD;
 }
 
-void PageDirectory_MapAddress(PageDirectory pd, uint32_t from_address, uint32_t to_address)
+void PageDirectory_MapAddress(Page_Directory PD, uint32_t logical_address, uint32_t physical_address)
 {
-    uint32_t page_number = (from_address >> 12) & 0x3FF;
-    uint32_t page_table = (from_address >> 22) & 0x3FF;
+    uint32_t page_number = (logical_address >> 12) & 0x3FF;
+    uint32_t page_table = (logical_address >> 22) & 0x3FF;
 
-    if(pd[page_table] == 0x2)
+    if(PD->pd[page_table] == 0x2)
     {
         uint32_t table_address = get_page(), i;
         uint32_t *pt = (uint32_t*)table_address;
+        /*Set the PRESENT and rw bit*/
+        PD->pd[page_table] = table_address | 0x3;
+        PageDirectory_MapAddress(PD, table_address, table_address);
 
         /*Assume page size is 4096*/
         for(i = 0; i < 1024; i++)
@@ -78,48 +81,71 @@ void PageDirectory_MapAddress(PageDirectory pd, uint32_t from_address, uint32_t 
             /*Set Not Preset bit*/
             pt[i] = 0x2; 
         }
-        /*Set the PRESENT and rw bit*/
-        pd[page_table] = table_address | 0x3;
-        pt[page_number] = (to_address & ~(0xFFF)) | 0x3;
+
+        /*Add the currently allocated page back to PageTable*/        
+        pt[page_number] = (physical_address & ~(0xFFF)) | 0x3;
     }
     else
     {
-        uint32_t *pt = (uint32_t*)(pd[page_table] & 0xFFFFF000);
-        pt[page_number] = (to_address & ~(0xFFF)) | 0x3;
+        uint32_t *pt = (uint32_t*)(PD->pd[page_table] & 0xFFFFF000);
+        pt[page_number] = (physical_address & ~(0xFFF)) | 0x3;
     }
 }
-void PageDirectory_UnMapAddress(PageDirectory pd, uint32_t address)
+uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
 {
+    uint32_t phy_address = 0;
     uint32_t page_number = (address >> 12) & 0x3FF;
     uint32_t page_table = (address >> 22) & 0x3FF;
 
-    if(pd[page_table] == 0x2)
+    if(PD->pd[page_table] == 0x2)
     {
         LOG_WARN("trying to unmap addressi %x which is not allocated", address);
     }
     else
     {
-        uint32_t *pt = (uint32_t*)(pd[page_table] & 0xFFFFF000);
+        uint32_t *pt = (uint32_t*)(PD->pd[page_table] & 0xFFFFF000);
+        phy_address = pt[page_number] & ~(0xFFF);
         pt[page_number] = 0x2;
+        PD->num_of_pages_freed++;
     }
+    return phy_address;
 }
 
-uint32_t get_mapped_page(void)
+uint32_t get_mapped_page(uint32_t size)
 {
-    uint32_t address = get_page();
-    PageDirectory_MapAddress(currentDirectory, address, address);
-    return address;
+    FN_ENTRY();
+    uint32_t logical_address;
+    if((size & 0xFFF) == 0)
+    {
+        logical_address = currentDirectory->heap_allocate_address;
+        LOG_INFO("logical_address : %x", logical_address);
+        while(size > 0)
+        {
+            uint32_t phy_address = get_page();                    
+            PageDirectory_MapAddress(currentDirectory, currentDirectory->heap_allocate_address, phy_address);
+            currentDirectory->heap_allocate_address += 0x1000;
+            size -= 0x1000;
+        }        
+    }
+    else
+    {
+        LOG_ERROR("size should be multiple for 4096");
+        logical_address = 0;
+    }
+    FN_EXIT();
+    return logical_address;
 }
 
 void free_mapped_page(uint32_t address)
 {
-    PageDirectory_UnMapAddress(currentDirectory, address);
-    free_page(address);
+    uint32_t phyaddress;
+    phyaddress = PageDirectory_UnMapAddress(currentDirectory, address);
+    free_page(phyaddress);
 }
 
 void initialise_virtual_paging(uint32_t ram_size)
 {    
-    PageDirectory page_directory;
+    Page_Directory page_directory;
     uint32_t address = 0;
     
     initialize_ram(ram_size);
@@ -138,12 +164,12 @@ void initialise_virtual_paging(uint32_t ram_size)
     }
 
     kernel_directory = page_directory;
+    kernel_directory->heap_allocate_address = 0x2000000;
 
     register_interrupt_handler(14, page_fault);
     switch_pd(page_directory);    
     enable_paging();
-
-    malloc_initialize();
+    
     return;
 }
 

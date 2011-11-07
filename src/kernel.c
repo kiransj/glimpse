@@ -8,12 +8,17 @@
 #define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
 int kernel_main(void)
 {  
+    FN_ENTRY();
     LOG_INFO("\n\n --------> IN Main <----------- %d\n");
     LOG_INFO("lets access a unmapped region");
-    uint32_t *address =(uint32_t*)(0x400000);
-    
-    address[0] = 1;
-    address[1] = 1;
+    uint32_t *address =(uint32_t*)get_mapped_page(4096*2);
+   
+    LOG_INFO("address : %x",address);
+
+    free_mapped_page(address);
+    FN_EXIT();
+ //   address[0] = 1;
+//    address[1] = 1;
     return 0;
 }
 
@@ -60,7 +65,7 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
   
     asm volatile ("sti");        
     initialise_virtual_paging(ram_size); 
-    init_timer(500);
+   // init_timer(500);
     kernel_main();
     while(1);
 }
