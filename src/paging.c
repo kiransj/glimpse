@@ -136,11 +136,25 @@ uint32_t get_mapped_page(uint32_t size)
     return logical_address;
 }
 
-void free_mapped_page(uint32_t address)
+void free_mapped_page(uint32_t address, uint32_t size)
 {
-    uint32_t phyaddress;
-    phyaddress = PageDirectory_UnMapAddress(currentDirectory, address);
-    free_page(phyaddress);
+    if((size & 0xFFF) == 0)
+    {
+        uint32_t phyaddress;
+        while(size > 0)
+        {
+            phyaddress = PageDirectory_UnMapAddress(currentDirectory, address);
+            free_page(phyaddress);
+            size -= 0x1000;
+            address += 0x1000;
+        }
+    }
+    else
+    {        
+        LOG_ERROR("size should be multiple for 4096");
+    }
+
+    return;
 }
 
 void initialise_virtual_paging(uint32_t ram_size)

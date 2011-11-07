@@ -26,5 +26,5 @@ void initialise_virtual_paging(uint32_t ram_size);
 Page_Directory PageDirectory_Create(void);
 void PageDirectory_MapAddress(Page_Directory pd, uint32_t from_address, uint32_t to_address);
 uint32_t get_mapped_page(uint32_t size);
-void free_mapped_page(uint32_t address);
+void free_mapped_page(uint32_t address, uint32_t size);
 #endif
