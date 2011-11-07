@@ -12,7 +12,7 @@ static void timer_callback(registers_t regs)
     UNUSED_PARAMETER(regs);
     tick++;
     {
-        printf("Tick: %u\n", ++seconds);
+        printf("Tick: %u\n\0", ++seconds);
     }
 
 }

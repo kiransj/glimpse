@@ -43,30 +43,60 @@ void enable_paging(void)
 void initialize_ram(uint32_t ram_size);
 static uint32_t get_page(void);
 
-void initialise_virtual_paging(uint32_t ram_size)
+typedef unsigned int *PageDirectory;
+
+PageDirectory PageDirectory_Create(void)
 {
-    
-    uint32_t *page_directory;
-    uint32_t *page_table, i, address = 0;
+    uint32_t i =0 ;
+    PageDirectory pd;
+    pd = (PageDirectory)get_page();
+    memset(pd, 0, 0x1000);
+
+    for(i = 0; i < 1024; i++)
+    {
+        /*Set Not Preset bit*/
+        pd[i] = 0x2; 
+    }
+    return pd;
+}
+
+void PageDirectory_MapAddress(PageDirectory pd, uint32_t from_address, uint32_t to_address)
+{
+    uint32_t page_number = (from_address >> 12) & 0x3FF;
+    uint32_t page_table = (from_address >> 22) & 0x3FF;
+
+    if(pd[page_table] == 0x2)
+    {
+        uint32_t table_address = get_page();
+        uint32_t *pt = (uint32_t*)table_address;
+
+        memset(pt, 0, 0x1000);
+        /*Set the PRESENT and rw bit*/
+        pd[page_table] = table_address | 0x3;
+        pt[page_number] = (to_address & ~(0xFFF)) | 0x3;
+    }
+    else
+    {
+        uint32_t *pt = (uint32_t*)(pd[page_table] & 0xFFFFF000);
+
+        pt[page_number] = (to_address & ~(0xFFF)) | 0x3;
+    }
+}
+
+void initialise_virtual_paging(uint32_t ram_size)
+{    
+    PageDirectory page_directory;
+    uint32_t address = 0, i;
 
     initialize_ram(ram_size);
-    
-    page_directory = (uint32_t*)get_page();
-
-    page_table = (uint32_t*)get_page();
-    page_directory[0] = ((uint32_t)page_table) | 0x3;
-
+    page_directory = PageDirectory_Create();
+ 
     for(i = 0, address = 0; i < 1024; i++)
     {
-        page_table[i] = address | 0x3;
+        PageDirectory_MapAddress(page_directory, address, address);
         address += 0x1000;
     }
 
-    /*Unsed Pagetable*/
-    for(i = 1; i < 1024; i++)
-    {
-        page_directory[i] = 0x2;
-    }
 
     register_interrupt_handler(14, page_fault);
     switch_pd((uint32_t)page_directory);
@@ -99,7 +129,6 @@ void page_fault(registers_t regs)
 
 extern uint32_t end;
 
-uint32_t current_ram_offset;
 const uint32_t initial_ram_offset = 0x100000;
 
 uint32_t num_of_pages;
@@ -145,27 +174,35 @@ static uint32_t get_page(void)
 void initialize_ram(uint32_t ram_size)    
 {
     int bit_map_size;
+    uint32_t current_ram_offset;
+
+    /*Get the amount of memory used till now
+     * end variable is defined in linker.ld*/
     current_ram_offset = ((uint32_t)&end + 0x1000 - 1) & ~(0x3FF);
     num_of_pages = (ram_size >> 12);
-    printf("Number of physical pages : %x\n", num_of_pages);
 
     /*bit map size in bytes (NOT WORD)*/
     bit_map_size = num_of_pages>>3;
-    printf("bit_map_size : %x\n", bit_map_size);
+    /*Allocate memory for page_bit_map*/
     page_bit_map = (uint32_t*)current_ram_offset;
 
+    /* Increment the current ram offset as memory is 
+     * allocated to page_bit_map*/
     while(bit_map_size > 0)
     {
-        printf("\none bit_map_size : %x\n", bit_map_size);
         current_ram_offset += 0x1000;
         bit_map_size -= 0x1000;
     }
     bit_map_size = num_of_pages>>3;
     memset(page_bit_map, 0, bit_map_size); 
+
+    /*Set the all the bits of ram that are currently used*/
     uint32_t tmp = initial_ram_offset;
     while(tmp < current_ram_offset)
     {
         set_bit(tmp);
         tmp += 0x1000;
     }
+
+    return;
 }

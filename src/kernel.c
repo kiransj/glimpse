@@ -8,10 +8,11 @@
 #define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
 int kernel_main(void)
 {  
-    printf("\n\n --------> IN Main <----------- %d\n", 0);
-    uint32_t *address =(uint32_t*)0x500000;
-
+    printf("\n\n --------> IN Main <----------- %d\n");
+    uint32_t *address =(uint32_t*)(0x400000 - 4);
+    
     address[0] = 1;
+    address[1] = 1;
 
     return 0;
 }
@@ -60,7 +61,8 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
 
     printf("\nTotal Ram Available : %d bytes (%d MB)\n", total_size, (total_size >> 20));
     initialise_virtual_paging(ram_size); 
-    init_timer(500000);
+    printf("\npaging done!!");    
+    init_timer(50);
     kernel_main();
     while(1);
 }

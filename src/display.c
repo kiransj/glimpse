@@ -60,6 +60,14 @@ void scroll(void)
     {
         videoram[i] = videoram[start_offset + i];
     }
+
+    start_offset = NUM_OF_COLUMNS * 2 * (NUM_OF_ROWS-1);
+    screen_size = (NUM_OF_ROWS) * NUM_OF_COLUMNS * 2;
+   
+    for(i = start_offset; i < screen_size; i++)
+    {
+        videoram[i] = 0;
+    }
     return;
 }
 

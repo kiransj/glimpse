@@ -1,5 +1,5 @@
 #include <util.h>
-
+#include <display.h>
 static void setToZero(void *buffer, uint32_t size)
 {
     FN_ENTRY();
