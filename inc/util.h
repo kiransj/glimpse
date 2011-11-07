@@ -16,8 +16,14 @@ uint16_t inw(uint16_t port);
 
 void memset(void *buffer, uint8_t ch, uint32_t size);
 
+#include "display.h"
 
-#define FN_ENTRY()      printf("%s() -->%s:%d\n", __func__, __FILE__, __LINE__)
+#define FN_ENTRY()     printf("%s() -->%s:%d\n", __func__, __FILE__, __LINE__)
 #define FN_EXIT()      printf("%s() <--%s:%d\n", __func__, __FILE__, __LINE__)
+
+#define LOG_INFO(format, args...)   printf("%s:%d>" format "\n", __FILE__, __LINE__, ## args)
+#define LOG_WARN(format, args...)   printf("%s:%d>" format "\n", __FILE__, __LINE__, ## args)
+#define LOG_ERROR(format, args...)  printf("%s:%d>" format "\n", __FILE__, __LINE__, ## args)
+
 #endif
 

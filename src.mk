@@ -9,6 +9,6 @@ C_SOURCES += src/descriptor_tables.c
 C_SOURCES += src/isr.c
 C_SOURCES += src/timer.c
 C_SOURCES += src/paging.c
-C_SOURCES += src/kheap.c
+C_SOURCES += src/ram_manager.c
 
 

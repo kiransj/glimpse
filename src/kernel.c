@@ -8,12 +8,12 @@
 #define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
 int kernel_main(void)
 {  
-    printf("\n\n --------> IN Main <----------- %d\n");
-    uint32_t *address =(uint32_t*)(0x400000 - 4);
+    LOG_INFO("\n\n --------> IN Main <----------- %d\n");
+    LOG_INFO("lets access a unmapped region");
+    uint32_t *address =(uint32_t*)(0x400000);
     
     address[0] = 1;
     address[1] = 1;
-
     return 0;
 }
 
@@ -37,7 +37,6 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
 
     GET_ESP(current_stack);
 
-    printf("\nmem_lower : %x (%d KB), mem_upper : %x (%d KB)\n",mbd->mem_lower, mbd->mem_lower, mbd->mem_upper, mbd->mem_upper);
     uint32_t count = mbd->mmap_length/sizeof(struct memory_map), i;
     struct memory_map *map = (struct memory_map *)mbd->mmap_addr;
 
@@ -46,23 +45,22 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     {
         if(map[i].type == 1)
         {
+#if 0            
             printf("a_low:%x, size:bytes %d (%d KB) (%d MB)\n",
                             map[i].base_addr_low,
                             map[i].base_length_low,
                             map[i].base_length_low>>10,
                             map[i].base_length_low>>20);
+#endif            
             if(ram_size <map[i].base_length_low)
                 ram_size = map[i].base_length_low;
             total_size += map[i].base_length_low;            
         }        
     }
   
-    asm volatile ("sti");    
-
-    printf("\nTotal Ram Available : %d bytes (%d MB)\n", total_size, (total_size >> 20));
+    asm volatile ("sti");        
     initialise_virtual_paging(ram_size); 
-    printf("\npaging done!!");    
-    init_timer(50);
+    init_timer(500);
     kernel_main();
     while(1);
 }
