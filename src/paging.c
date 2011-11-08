@@ -6,8 +6,19 @@
 #include "paging.h"
 #include "util.h"
 #include "memory.h"
+#include "asm.h"
 
+typedef unsigned int *PageDirectory;
+
+struct __page_directory
+{
+    PageDirectory pd;
+    uint32_t heap_allocate_address;
+    uint32_t num_of_pages_freed;
+};
 Page_Directory currentDirectory, kernel_directory;
+
+
 uint32_t switch_pd(Page_Directory directory)
 {
 	uint32_t cr3;
@@ -113,7 +124,7 @@ uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
 
 uint32_t get_mapped_page(uint32_t size)
 {
-    FN_ENTRY();
+	CLEAR_INTERRUPT();
     uint32_t logical_address;
     if((size & 0xFFF) == 0)
     {
@@ -132,12 +143,13 @@ uint32_t get_mapped_page(uint32_t size)
         LOG_ERROR("size should be multiple for 4096");
         logical_address = 0;
     }
-    FN_EXIT();
+	ENABLE_INTERRUPT();
     return logical_address;
 }
 
 void free_mapped_page(uint32_t address, uint32_t size)
 {
+	CLEAR_INTERRUPT();
     if((size & 0xFFF) == 0)
     {
         uint32_t phyaddress;
@@ -153,12 +165,12 @@ void free_mapped_page(uint32_t address, uint32_t size)
     {        
         LOG_ERROR("size should be multiple for 4096");
     }
-
+	ENABLE_INTERRUPT();
     return;
 }
 
 void initialise_virtual_paging(uint32_t ram_size)
-{    
+{   
     Page_Directory page_directory;
     uint32_t address = 0;
     
@@ -191,6 +203,7 @@ void initialise_virtual_paging(uint32_t ram_size)
 void page_fault(registers_t regs)
 {
     // The faulting address is stored in the CR2 register.
+	CLEAR_INTERRUPT();
     uint32_t faulting_address;
 
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));

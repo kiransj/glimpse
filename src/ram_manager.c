@@ -1,6 +1,7 @@
 #include <ram_manager.h>
 #include <display.h>
 #include "memory.h"
+#include "asm.h"
 extern uint32_t end;
 
 const uint32_t initial_ram_offset = 0x100000;
@@ -28,14 +29,14 @@ static void set_bit(uint32_t address)
         else
         {
             LOG_ERROR("bit_number (%d) > num_of_pages (%d)\n", page_number, num_of_pages);
-            asm volatile("cli");
+		    CLEAR_INTERRUPT();	
             while(1);
         }
     }
     else
     {
         LOG_ERROR("address %x is less than initial_ram_offset %x\n", address, initial_ram_offset);
-        asm volatile("cli");
+		CLEAR_INTERRUPT();	
         while(1);
     }    
 }
