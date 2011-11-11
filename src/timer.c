@@ -5,17 +5,7 @@
 #include <isr.h>
 #include <display.h>
 
-uint32_t tick = 0, seconds = 0;
 
-static void timer_callback(registers_t regs)
-{
-    UNUSED_PARAMETER(regs);
-    tick++;
-    {
-        printf("Tick: %u\n\0", ++seconds);
-    }
-
-}
 static void keyboard_callback(registers_t regs)
 {
     UNUSED_PARAMETER(regs);    
@@ -33,8 +23,6 @@ static void keyboard_callback(registers_t regs)
 }
 void init_timer(uint32_t frequency)
 {
-    // Firstly, register our timer callback.
-    register_interrupt_handler(IRQ0, &timer_callback);
     register_interrupt_handler(IRQ1, &keyboard_callback);
 
     // The value we send to the PIT is the value to divide it's input clock

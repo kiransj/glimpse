@@ -67,7 +67,8 @@ ISR_NOERRCODE 28
 ISR_NOERRCODE 29
 ISR_NOERRCODE 30
 ISR_NOERRCODE 31
-IRQ   0,    32
+
+;IRQ   0,    32
 IRQ   1,    33
 IRQ   2,    34
 IRQ   3,    35
@@ -84,6 +85,75 @@ IRQ  13,    45
 IRQ  14,    46
 IRQ  15,    47
 
+
+
+extern timer_callback 
+extern schedule 
+
+;this interrupt is to implement yeild()
+global isr128
+isr128:
+    cli
+    pusha
+    push ds
+    push es
+    push fs
+    push gs
+    mov eax, 0x10
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+
+    ; pass the current stack pointer as argument 
+    ; to schedule function
+    mov eax, esp     
+    push eax
+    call schedule  
+    mov esp, eax
+    ; acknowledge the IRQ
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    sti
+    iret
+
+;IRQ0 Interrupt is used for scheduling
+global irq0
+irq0:
+    cli
+    pusha
+    push ds
+    push es
+    push fs
+    push gs
+    mov eax, 0x10
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+
+    ; pass the current stack pointer as argument 
+    ; to schedule function
+    mov eax, esp     
+    push eax
+    call timer_callback 
+    mov esp, eax
+    ; acknowledge the IRQ
+    mov al, 0x20
+    out 0x20, al 
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    sti
+    iret
+
 ; In isr.c
 extern isr_handler
 
@@ -92,23 +162,21 @@ extern isr_handler
 ; and finally restores the stack frame.
 isr_common_stub:
     pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
-
-    mov ax, ds               ; Lower 16-bits of eax = ds.
-    push eax                 ; save the data segment descriptor
+    push ds
+    push es
+    push fs
+    push gs
 
     mov ax, 0x10  ; load the kernel data segment descriptor
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-
     call isr_handler
-
-    pop ebx        ; reload the original data segment descriptor
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
+    pop gs
+    pop fs
+    pop es
+    pop ds
 
     popa                     ; Pops edi,esi,ebp...
     add esp, 8     ; Cleans up the pushed error code and pushed ISR number
@@ -123,28 +191,24 @@ extern irq_handler
 ; and finally restores the stack frame.
 irq_common_stub:
     pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
-
-    mov ax, ds               ; Lower 16-bits of eax = ds.
-    push eax                 ; save the data segment descriptor
+    push ds
+    push es
+    push fs
+    push gs
 
     mov ax, 0x10  ; load the kernel data segment descriptor
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-
     call irq_handler
 
-    pop ebx        ; reload the original data segment descriptor
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
+    pop gs        ; reload the original data segment descriptor
+    pop fs
+    pop es
+    pop ds
 
     popa                     ; Pops edi,esi,ebp...
     add esp, 8     ; Cleans up the pushed error code and pushed ISR number
     sti
     iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
-
-
-        

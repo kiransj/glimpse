@@ -4,9 +4,21 @@
 #include <timer.h>
 #include <multiboot.h>
 #include <paging.h>
-
+#include <schedule.h>
 #include <asm.h>
 #define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
+
+
+extern uint32_t timer_ticks;
+
+void sleep(uint32_t ticks)
+{
+    uint32_t i = timer_ticks + ticks;    
+    while(timer_ticks < i)
+    {
+        asm volatile("int $0x80");
+    }
+}
 int kernel_main(void)
 {  
     FN_ENTRY();
@@ -15,9 +27,9 @@ int kernel_main(void)
    
     LOG_INFO("address : %x",address);
         
-    for(i = 0; i <= 0x2000; i++)
+    for(i = 0; i < 0x2000; i++)
     {
-   ///     LOG_INFO("%x", i);
+        LOG_INFO("%x", i);
         address[i] = 1;
     }        
 
@@ -25,9 +37,23 @@ int kernel_main(void)
    
     LOG_INFO("done");
     FN_EXIT();
+    i = 0;
+    while(1)
+    {
+        sleep(10);
+        printf("I am in kernel!!!! %d\n", timer_ticks);
+    }
     return 0;
 }
 
+void my_thread(void)
+{
+    while(1)
+    {
+        sleep(3);
+        printf("Thread Id : %d\n", get_pid());
+    }
+}
 void kernel_entry(struct multiboot *mbd, uint32_t esp)
 {
 	CLEAR_INTERRUPT();
@@ -61,12 +87,19 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
         }        
     }
  
-
     initialise_virtual_paging(ram_size); 
+    initialize_scheduling();
+    //init_timer(1);
 
+    ENABLE_INTERRUPT();
 
+    kthread_create(my_thread);
+    kthread_create(my_thread);
 
-    init_timer(50);
+#if 0    
     kernel_main();
+#endif
+    my_thread();
+    asm volatile ("int $0x80");
     while(1);
 }
