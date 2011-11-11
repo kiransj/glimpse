@@ -85,9 +85,43 @@ IRQ  13,    45
 IRQ  14,    46
 IRQ  15,    47
 
-;IRQ0 Interrupt is used for scheduling
+
 
 extern timer_callback 
+extern schedule 
+
+;this interrupt is to implement yeild()
+global isr128
+isr128:
+    cli
+    pusha
+    push ds
+    push es
+    push fs
+    push gs
+    mov eax, 0x10
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+
+    ; pass the current stack pointer as argument 
+    ; to schedule function
+    mov eax, esp     
+    push eax
+    call schedule  
+    mov esp, eax
+    ; acknowledge the IRQ
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    sti
+    iret
+
+;IRQ0 Interrupt is used for scheduling
 global irq0
 irq0:
     cli

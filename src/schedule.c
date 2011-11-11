@@ -27,11 +27,10 @@ struct _task
 
 struct _task *current_task;
 struct _task *task_list;
-uint32_t timer_callback(uint32_t esp)
-{
-    timer_ticks += 1;
 
-    if((timer_ticks % 18 == 0) && (scheduling_initialzed))
+uint32_t schedule(uint32_t esp)
+{
+    if(scheduling_initialzed)
     {
         uint32_t old_pid = current_task->pid;
         printf("Current ESP : %u, ticks = %u\n", esp, timer_ticks);
@@ -41,6 +40,17 @@ uint32_t timer_callback(uint32_t esp)
         printf("old_pid = %x, new_pid = %x\n", old_pid, current_task->pid);
     }
     return esp;
+}
+
+uint32_t timer_callback(uint32_t esp)
+{
+    uint32_t ret_esp = esp;
+    timer_ticks += 1;
+    if((timer_ticks % 18 == 0))
+    {
+        ret_esp = schedule(esp);
+    }
+    return ret_esp;
 }
 
 void initialize_scheduling(void)
@@ -62,9 +72,9 @@ uint32_t get_pid(void)
 uint32_t kthread_create(void (*thread)(void))
 {
     CLEAR_INTERRUPT();
-    uint32_t *stack;
+    uint32_t *stack, address;
     struct _task *task = (struct _task *)allocate_block32();
-    task->stack = get_mapped_page(0x1000) + 0x1000;
+    address = task->stack = get_mapped_page(0x1000) + 0x1000;
     stack = (uint32_t*)task->stack;
 
     *--stack = 0x202; //EFLAGS
@@ -92,7 +102,7 @@ uint32_t kthread_create(void (*thread)(void))
 	task->stack = (uint32_t) stack;
 	task->thread = thread;
     task->next = current_task->next;
-    current_task->next = task;    
+    current_task->next = task;        
     ENABLE_INTERRUPT();
     return task->pid;
 }

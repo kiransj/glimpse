@@ -13,8 +13,11 @@ extern uint32_t timer_ticks;
 
 void sleep(uint32_t ticks)
 {
-    uint32_t i = timer_ticks + ticks;
-    while(timer_ticks < i);
+    uint32_t i = timer_ticks + ticks;    
+    while(timer_ticks < i)
+    {
+        asm volatile("int $0x80");
+    }
 }
 int kernel_main(void)
 {  
@@ -47,7 +50,7 @@ void my_thread(void)
 {
     while(1)
     {
-        sleep(5);
+        sleep(3);
         printf("Thread Id : %d\n", get_pid());
     }
 }
@@ -86,11 +89,17 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
  
     initialise_virtual_paging(ram_size); 
     initialize_scheduling();
-    init_timer(50);
+    //init_timer(1);
 
     ENABLE_INTERRUPT();
+
     kthread_create(my_thread);
     kthread_create(my_thread);
+
+#if 0    
     kernel_main();
+#endif
+    my_thread();
+    asm volatile ("int $0x80");
     while(1);
 }
