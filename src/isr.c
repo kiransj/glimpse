@@ -18,7 +18,7 @@ void register_interrupt_handler(uint8_t n, isr_t handler)
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs)
 {
-    printf("recieved software interrupt: %u, %u\n", regs.int_no, regs.err_code);
+    LOG_INFO("recieved software interrupt: %u, %u", regs.int_no, regs.err_code);
 
     if (interrupt_handlers[regs.int_no] != 0)
     {
@@ -27,7 +27,7 @@ void isr_handler(registers_t regs)
     }
     else
     {
-        printf("unhandled software interrupt %u\n", regs.int_no);
+        LOG_ERROR("unhandled software interrupt %u", regs.int_no);
     }
 }
 

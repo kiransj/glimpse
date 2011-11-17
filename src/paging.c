@@ -5,7 +5,7 @@
 #include "ram_manager.h"
 #include "paging.h"
 #include "util.h"
-#include "memory.h"
+#include "malloc.h"
 #include "asm.h"
 
 typedef unsigned int *PageDirectory;
@@ -61,7 +61,7 @@ void page_fault(registers_t regs);
 Page_Directory PageDirectory_Create(void)
 {
     uint32_t i =0 ;
-    Page_Directory PD = (Page_Directory)allocate_block32();
+    Page_Directory PD = (Page_Directory)kmalloc(sizeof(struct __page_directory));
     PD->pd = (PageDirectory)get_page();
     PD->heap_allocate_address = PD->num_of_pages_freed = 0; 
     /*Assume page size is 4096*/
