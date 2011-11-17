@@ -9,7 +9,7 @@ OBJECTS += $(C_SOURCES:.c=.o)
 
 INCLUDES := -I./inc
 
-CFLAGS := -Wall -Wextra  -nostdlib -DDEBUG
+CFLAGS := -Wall -Wextra  -nostdlib #-DDEBUG
 CFLAGS += -fno-builtin -nostartfiles -nodefaultlibs
 
 KERNEL := output/kernel.bin

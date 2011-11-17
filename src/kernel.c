@@ -20,7 +20,7 @@ int kernel_main(void)
 
     for(i = 0; i < 0x2000; i++)
     {
-        LOG_INFO("%x", i);
+        LOG_WARN("%x", i);
         address[i] = 1;
     }
 
@@ -28,38 +28,40 @@ int kernel_main(void)
 
     LOG_INFO("done");
     FN_EXIT();
-    i = 0;
+    return 0;
+}
+
+int my_thread_sleep(void)
+{
+    uint32_t num = 0;
     while(1)
     {
         sleep(10);
-        printf("I am in kernel!!!! %d\n", timer_ticks);
+        if(num == 10)
+            break;
+        printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
+    }
+    printf("Ending thread %d\n", get_pid());
+    return 0;
+}
+int my_thread_nosleep(void)
+{
+    uint32_t num = 0;
+    while(1)
+    {
+        sleep(100);
+        printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
     return 0;
 }
 
-void my_thread_sleep(void)
-{
-    while(1)
-    {
-        sleep(100);
-        printf("Sleep:Thread Id : %d\n", get_pid());
-    }
-}
-void my_thread_nosleep(void)
-{
-    while(1)
-    {
-        sleep(100);
-        printf("NoSleep:Thread Id : %d\n", get_pid());
-    }
-}
-
-void main_thread(void)
+int main_thread(void)
 {
    sleep(1000);
    CLEAR_INTERRUPT();
    print_ktask_list();
    while(1);
+   return 0;
 }
 void kernel_entry(struct multiboot *mbd, uint32_t esp)
 {
@@ -98,13 +100,21 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     initialize_scheduling();
 
     ENABLE_INTERRUPT();
+    
 
-    kthread_create(my_thread_sleep, "thread1");
     kthread_create(my_thread_nosleep, "thread2");
-    kthread_create(main_thread, "main_thread");
-
-#if 0
+    kthread_create(my_thread_nosleep, "thread3");
+    
+    kthread_create(my_thread_sleep, "thread1");
+    while(1)
+    {
+        printf("main thread : %d\n", get_pid());
+        uint32_t wake_up = timer_ticks + 100;
+        while(wake_up > timer_ticks);
+    }
+#if 0 
     kernel_main();
+    while(1);
 #endif
     return;
 }

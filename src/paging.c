@@ -7,7 +7,7 @@
 #include "util.h"
 #include "malloc.h"
 #include "asm.h"
-
+#include "schedule.h"
 typedef unsigned int *PageDirectory;
 
 struct __page_directory
@@ -224,7 +224,7 @@ void page_fault(registers_t regs)
     if (id) {LOG_ERROR("instructionFetch ");}
     LOG_ERROR(") at %x", faulting_address);
 
-    asm volatile ("cli");
+    LOG_ERROR("Page fault from task : %d", get_pid());    
     while(1);
 }
 

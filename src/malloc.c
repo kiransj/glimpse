@@ -141,8 +141,6 @@ void* kmalloc(const uint32_t size)
 
     print_mem_list();
     LOG_ERROR("No More Memory to allocate!!!!, stoping everything");
-    CLEAR_INTERRUPT();
-    while(1);
 	return NULL;
 }
 
