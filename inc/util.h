@@ -8,6 +8,11 @@ typedef unsigned int uint32_t;
 typedef unsigned char uint8_t;
 typedef unsigned short int uint16_t;
 
+typedef enum __bool
+{
+    false = 0,
+    true = 1,
+}bool;
 #define NULL    '\0'
 
 void outb(uint16_t port, uint8_t value);
@@ -25,6 +30,11 @@ void memset(void *buffer, uint8_t ch, uint32_t size);
 #define LOG_INFO(format, args...)   printf("%s:%d>" format "\n", __FILE__, __LINE__, ## args)
 #define LOG_WARN(format, args...)   printf("%s:%d>" format "\n", __FILE__, __LINE__, ## args)
 #define LOG_ERROR(format, args...)  printf("%s:%d>" format "\n", __FILE__, __LINE__, ## args)
+
+
+
+uint32_t strcpy(char *dest, char *src);
+uint32_t strlen(char *str);
 
 #endif
 

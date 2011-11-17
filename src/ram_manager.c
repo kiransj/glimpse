@@ -1,7 +1,7 @@
 #include <ram_manager.h>
 #include <display.h>
-#include "memory.h"
-#include "asm.h"
+#include <malloc.h>
+#include <asm.h>
 extern uint32_t end;
 
 const uint32_t initial_ram_offset = 0x100000;
@@ -135,8 +135,8 @@ void initialize_ram(uint32_t ram_size)
     bit_map_size = num_of_pages>>3;
     memset(page_bit_map, 0, bit_map_size); 
 
-    malloc_initialize(current_ram_offset);
-    current_ram_offset += 0x1000;
+    kmalloc_initialize(current_ram_offset, 0x4000);
+    current_ram_offset += 0x4000;
     /*Set the all the bits of ram that are currently used*/
     uint32_t tmp = initial_ram_offset;
     while(tmp < current_ram_offset)

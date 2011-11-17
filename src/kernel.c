@@ -1,7 +1,6 @@
 #include <util.h>
 #include <display.h>
 #include <descriptor_tables.h>
-#include <timer.h>
 #include <multiboot.h>
 #include <paging.h>
 #include <schedule.h>
@@ -11,14 +10,6 @@
 
 extern uint32_t timer_ticks;
 
-void sleep(uint32_t ticks)
-{
-    uint32_t i = timer_ticks + ticks;    
-    while(timer_ticks < i)
-    {
-        asm volatile("int $0x80");
-    }
-}
 int kernel_main(void)
 {  
     FN_ENTRY();
@@ -46,13 +37,29 @@ int kernel_main(void)
     return 0;
 }
 
-void my_thread(void)
+void my_thread_sleep(void)
 {
     while(1)
     {
-        sleep(3);
-        printf("Thread Id : %d\n", get_pid());
+        sleep(5);
+        printf("Sleep:Thread Id : %d\n", get_pid());
     }
+}
+void my_thread_nosleep(void)
+{
+    while(1)
+    {
+        sleep(5);
+        printf("NoSleep:Thread Id : %d\n", get_pid());
+    }
+}
+
+void main_thread(void)
+{
+   sleep(100);
+   CLEAR_INTERRUPT();
+   print_ktask_list();
+   while(1);
 }
 void kernel_entry(struct multiboot *mbd, uint32_t esp)
 {
@@ -88,18 +95,16 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     }
  
     initialise_virtual_paging(ram_size); 
-    initialize_scheduling();
-    //init_timer(1);
+    initialize_scheduling();    
 
     ENABLE_INTERRUPT();
 
-    kthread_create(my_thread);
-    kthread_create(my_thread);
+    kthread_create(my_thread_sleep, "thread1");
+    kthread_create(my_thread_nosleep, "thread2");
+    kthread_create(main_thread, "thread3");
 
 #if 0    
     kernel_main();
 #endif
-    my_thread();
-    asm volatile ("int $0x80");
-    while(1);
+    return;
 }
