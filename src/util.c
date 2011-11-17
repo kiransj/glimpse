@@ -61,3 +61,22 @@ uint16_t inw(uint16_t port)
     asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));
     return ret;
 }
+
+uint32_t strlen(char *str)
+{
+    uint32_t i = 0;
+    while(str[i++] != '\0');
+    return i;
+}
+
+uint32_t strcpy(char *dest, char *src)
+{
+    uint32_t i = 0;
+    while(src[i] != '\0')
+    {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+    return i;   
+}

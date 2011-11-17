@@ -10,7 +10,8 @@ C_SOURCES += src/isr.c
 C_SOURCES += src/timer.c
 C_SOURCES += src/paging.c
 C_SOURCES += src/ram_manager.c
-C_SOURCES += src/memory.c
+#C_SOURCES += src/memory.c
 C_SOURCES += src/schedule.c
+C_SOURCES += src/malloc.c
 
 
