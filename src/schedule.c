@@ -42,7 +42,7 @@ void print_ktask_list(void)
     struct _task *task = current_task;
     do
     {
-        printf("Pid(%d), state(%d), total_cyles(%d), name(%s)\n", task->pid, task->state, task->total_cycles, task->threadName);
+        printf("Pid(%d), state(%d), total_time(%d ms), name(%s)\n", task->pid, task->state, task->total_cycles*10, task->threadName);
         task = task->next;
     }
     while(task != current_task);
@@ -50,8 +50,10 @@ void print_ktask_list(void)
     return ;
 }
 
-void sleep(uint32_t cycles)
+#define NUM_CYCLES(x) (x)
+void sleep(uint32_t milliSeconds)
 {
+    uint32_t cycles = NUM_CYCLES(milliSeconds);
     if(scheduling_initialzed)
     {
         CLEAR_INTERRUPT();
@@ -63,7 +65,7 @@ void sleep(uint32_t cycles)
     else
     {
         /*Is scheduling is not enabled then have busy loop*/
-        printf("sleep Busy Loop!!!");
+        LOG_WARN("sleep Busy Loop!!!");
         uint32_t wake_up = timer_ticks + cycles;
         while(wake_up > timer_ticks);
     }
@@ -75,7 +77,9 @@ uint32_t schedule(uint32_t esp)
 {
     if(scheduling_initialzed)
     {
+#ifdef DEBUG        
         uint32_t old_pid = current_task->pid;
+#endif        
         current_task->total_cycles += (timer_ticks - current_task->prev_tick_count) + 1;
         current_task->stack = esp;
         switch(current_task->state)
@@ -105,21 +109,16 @@ uint32_t schedule(uint32_t esp)
         while(TASK_STATE_RUNNING != current_task->state);
         current_task->prev_tick_count = timer_ticks;
         esp = current_task->stack;
-        printf("old_pid = %x, new_pid = %x\n", old_pid, current_task->pid);
+        LOG_INFO("old_pid = %x, new_pid = %x", old_pid, current_task->pid);
     }
     return esp;
 }
 
 uint32_t timer_callback(uint32_t esp)
 {
-    uint32_t ret_esp = esp;
+    uint32_t ret_esp = 0;
     timer_ticks += 1;
-
-    if(timer_ticks % 2 == 0)
-    {
-        /*schedule if necessary*/
-        ret_esp = schedule(esp);
-    }        
+    ret_esp = schedule(esp);
     return ret_esp;
 }
 
@@ -135,8 +134,8 @@ void initialize_scheduling(void)
    current_task = task_list;
    scheduling_initialzed = 1;
 
-    /*Start the timer*/
-    init_timer(50);
+    /*Start the timer 1 milli seconds*/
+    init_timer(1000);
 }
 
 uint32_t get_pid(void)

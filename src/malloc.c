@@ -41,7 +41,7 @@ void set_block_accupied(BlockHeader block, bool flag)
 		}
 		else
 		{
-			printf("Warning : block is already accupied\n");
+			LOG_WARN("Warning : block is already accupied\n");
 		}
 	}
 	else
@@ -113,8 +113,7 @@ void* kmalloc(const uint32_t size)
 	BlockHeader tmp = list->block, tmp1 = NULL;
 
 	tmp_size = ((size < 16)? 16 : size) + sizeof(struct block_header);
- //   tmp_size += 100;
-    printf("Allocate : %d, %d\n", size, tmp_size);
+    LOG_INFO("Allocate : %d, %d\n", size, tmp_size);
 	while(NULL != tmp)
 	{		
 		if((true == is_block_free(tmp)) && (tmp_size <= tmp->size))
@@ -141,7 +140,7 @@ void* kmalloc(const uint32_t size)
 	}
    
     print_mem_list();
-    printf("What!!!");
+    LOG_ERROR("No More Memory to allocate!!!!, stoping everything");
     CLEAR_INTERRUPT();
     while(1);
 	return NULL;
@@ -193,7 +192,7 @@ void kfree(void *addr)
 					}
 					else
 					{
-						printf("address not found\n");
+						LOG_ERROR("address not found\n");
 					}
 					return;
 				}
@@ -203,7 +202,7 @@ void kfree(void *addr)
 		}
 		list = list->next;
 	}
-	printf("address not found\n");
+	LOG_ERROR("address not found\n");
 	return;
 }
 
@@ -213,10 +212,10 @@ void print_mem_list(void)
 	while(NULL != list)
 	{
 		BlockHeader tmp = list->block;
-		printf("<-MemList : MainBlock(%d), address(%d), size(%d) ->\n", list->mainBlock, list->block_starting_address, list->size);
+		LOG_INFO("<-MemList : MainBlock(%d), address(%d), size(%d) ->\n", list->mainBlock, list->block_starting_address, list->size);
 		while(NULL != tmp)
 		{
-			printf("\t<-BlockList: Address(%d), size(%d), flag(%d) ->\n", tmp->address, tmp->size, tmp->flags);
+			LOG_INFO("\t<-BlockList: Address(%d), size(%d), flag(%d) ->\n", tmp->address, tmp->size, tmp->flags);
 			tmp = tmp->next;
 		}
 		list = list->next;

@@ -13,7 +13,7 @@ extern uint32_t timer_ticks;
 int kernel_main(void)
 {  
     FN_ENTRY();
-    LOG_INFO("\n\n --------> IN Main <----------- \n");
+    LOG_INFO("\n\n --------> IN Main <----------- ");
     uint32_t *address =(uint32_t*)get_mapped_page(sizeof(uint32_t) * 0x2000), i;
    
     LOG_INFO("address : %x",address);
@@ -41,7 +41,7 @@ void my_thread_sleep(void)
 {
     while(1)
     {
-        sleep(5);
+        sleep(100);
         printf("Sleep:Thread Id : %d\n", get_pid());
     }
 }
@@ -49,14 +49,14 @@ void my_thread_nosleep(void)
 {
     while(1)
     {
-        sleep(5);
+        sleep(100);
         printf("NoSleep:Thread Id : %d\n", get_pid());
     }
 }
 
 void main_thread(void)
 {
-   sleep(100);
+   sleep(1000);
    CLEAR_INTERRUPT();
    print_ktask_list();
    while(1);
@@ -101,7 +101,7 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
 
     kthread_create(my_thread_sleep, "thread1");
     kthread_create(my_thread_nosleep, "thread2");
-    kthread_create(main_thread, "thread3");
+    kthread_create(main_thread, "main_thread");
 
 #if 0    
     kernel_main();
