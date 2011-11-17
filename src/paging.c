@@ -26,7 +26,7 @@ uint32_t switch_pd(Page_Directory directory)
     currentDirectory = directory;
 	asm volatile("mov %%cr3, %%eax" : "=a"(cr3));
 	asm volatile("mov %%eax, %%cr3" :: "a"(dir));
-	return cr3;    
+	return cr3;
 }
 
 void disable_paging(void)
@@ -46,7 +46,7 @@ void enable_paging(void)
 }
 
 /*
- * Page Format 
+ * Page Format
  * Present : 1
  * rw      : 1
  * user    : 1
@@ -63,12 +63,12 @@ Page_Directory PageDirectory_Create(void)
     uint32_t i =0 ;
     Page_Directory PD = (Page_Directory)kmalloc(sizeof(struct __page_directory));
     PD->pd = (PageDirectory)get_page();
-    PD->heap_allocate_address = PD->num_of_pages_freed = 0; 
+    PD->heap_allocate_address = PD->num_of_pages_freed = 0;
     /*Assume page size is 4096*/
     for(i = 0; i < 1024; i++)
     {
         /*Set Not Preset bit*/
-        PD->pd[i] = 0x2; 
+        PD->pd[i] = 0x2;
     }
     return PD;
 }
@@ -90,10 +90,10 @@ void PageDirectory_MapAddress(Page_Directory PD, uint32_t logical_address, uint3
         for(i = 0; i < 1024; i++)
         {
             /*Set Not Preset bit*/
-            pt[i] = 0x2; 
+            pt[i] = 0x2;
         }
 
-        /*Add the currently allocated page back to PageTable*/        
+        /*Add the currently allocated page back to PageTable*/
         pt[page_number] = (physical_address & ~(0xFFF)) | 0x3;
     }
     else
@@ -132,11 +132,11 @@ uint32_t get_mapped_page(uint32_t size)
         LOG_INFO("logical_address : %x", logical_address);
         while(size > 0)
         {
-            uint32_t phy_address = get_page();                    
+            uint32_t phy_address = get_page();
             PageDirectory_MapAddress(currentDirectory, currentDirectory->heap_allocate_address, phy_address);
             currentDirectory->heap_allocate_address += 0x1000;
             size -= 0x1000;
-        }        
+        }
     }
     else
     {
@@ -162,7 +162,7 @@ void free_mapped_page(uint32_t address, uint32_t size)
         }
     }
     else
-    {        
+    {
         LOG_ERROR("size should be multiple for 4096");
     }
 	ENABLE_INTERRUPT();
@@ -170,10 +170,10 @@ void free_mapped_page(uint32_t address, uint32_t size)
 }
 
 void initialise_virtual_paging(uint32_t ram_size)
-{   
+{
     Page_Directory page_directory;
     uint32_t address = 0;
-    
+
     initialize_ram(ram_size);
     page_directory = PageDirectory_Create();
 
@@ -193,9 +193,9 @@ void initialise_virtual_paging(uint32_t ram_size)
     kernel_directory->heap_allocate_address = 0x2000000;
 
     register_interrupt_handler(14, page_fault);
-    switch_pd(page_directory);    
+    switch_pd(page_directory);
     enable_paging();
-    
+
     return;
 }
 
@@ -207,7 +207,7 @@ void page_fault(registers_t regs)
     uint32_t faulting_address;
 
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
-    
+
     // The error code gives us details of what happened.
     int present   = !(regs.err_code & 0x1); // Page not present
     int rw = regs.err_code & 0x2;           // Write operation?

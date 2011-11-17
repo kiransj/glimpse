@@ -57,8 +57,8 @@ void sleep(uint32_t milliSeconds)
     if(scheduling_initialzed)
     {
         CLEAR_INTERRUPT();
-        current_task->state = TASK_STATE_SLEEPING; 
-        current_task->wake_up_cycle = timer_ticks + cycles; 
+        current_task->state = TASK_STATE_SLEEPING;
+        current_task->wake_up_cycle = timer_ticks + cycles;
         ENABLE_INTERRUPT();
         asm volatile("int $0x80");
     }
@@ -77,9 +77,9 @@ uint32_t schedule(uint32_t esp)
 {
     if(scheduling_initialzed)
     {
-#ifdef DEBUG        
+#ifdef DEBUG
         uint32_t old_pid = current_task->pid;
-#endif        
+#endif
         current_task->total_cycles += (timer_ticks - current_task->prev_tick_count) + 1;
         current_task->stack = esp;
         switch(current_task->state)
@@ -87,7 +87,7 @@ uint32_t schedule(uint32_t esp)
             case TASK_STATE_RUNNING:
                     current_task->state = TASK_STATE_WAITING_CPU;
                     break;
-            default: 
+            default:
                     break;
         }
         do
@@ -104,7 +104,7 @@ uint32_t schedule(uint32_t esp)
             else
             {
                 current_task->state = TASK_STATE_RUNNING;
-            } 
+            }
         }
         while(TASK_STATE_RUNNING != current_task->state);
         current_task->prev_tick_count = timer_ticks;
@@ -173,11 +173,11 @@ uint32_t kthread_create(void (*thread)(void), char threadName[16])
 	*--stack = 0x10;	// GS
     task->state = TASK_STATE_NOT_STARTED;
     task->pid = pid++;
-    strcpy(task->threadName, threadName); 
+    strcpy(task->threadName, threadName);
 	task->stack = (uint32_t) stack;
 	task->thread = thread;
     task->next = current_task->next;
-    current_task->next = task;        
+    current_task->next = task;
     ENABLE_INTERRUPT();
     return task->pid;
 }

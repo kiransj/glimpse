@@ -29,16 +29,16 @@ static void set_bit(uint32_t address)
         else
         {
             LOG_ERROR("bit_number (%d) > num_of_pages (%d)\n", page_number, num_of_pages);
-		    CLEAR_INTERRUPT();	
+		    CLEAR_INTERRUPT();
             while(1);
         }
     }
     else
     {
         LOG_ERROR("address %x is less than initial_ram_offset %x\n", address, initial_ram_offset);
-		CLEAR_INTERRUPT();	
+		CLEAR_INTERRUPT();
         while(1);
-    }    
+    }
 }
 static void unset_bit(uint32_t address)
 {
@@ -53,7 +53,7 @@ static void unset_bit(uint32_t address)
             LOG_ERROR("address %x is not allocated at all", address);
         }
         else
-        {    
+        {
             page_bit_map[index] &= ~((1 << offset));
         }
     }
@@ -75,7 +75,7 @@ uint32_t check_if_address_allocated(uint32_t address)
     }
     else
     {
-        return 0; 
+        return 0;
     }
 }
 uint32_t get_page(void)
@@ -83,7 +83,7 @@ uint32_t get_page(void)
     uint32_t num_of_index = num_of_pages >> 2, i;
 
     for(i = 0; i < num_of_index; i++)
-    {        
+    {
         if((page_bit_map[i] & 0xFFFFFFFF) != 0xFFFFFFFF)
         {
             uint32_t flag = 1, j;
@@ -110,7 +110,7 @@ void free_page(uint32_t address)
     unset_bit(address);
 }
 
-void initialize_ram(uint32_t ram_size)    
+void initialize_ram(uint32_t ram_size)
 {
     int bit_map_size;
     uint32_t current_ram_offset;
@@ -125,7 +125,7 @@ void initialize_ram(uint32_t ram_size)
     /*Allocate memory for page_bit_map*/
     page_bit_map = (uint32_t*)current_ram_offset;
 
-    /* Increment the current ram offset as memory is 
+    /* Increment the current ram offset as memory is
      * allocated to page_bit_map*/
     while(bit_map_size > 0)
     {
@@ -133,7 +133,7 @@ void initialize_ram(uint32_t ram_size)
         bit_map_size -= 0x1000;
     }
     bit_map_size = num_of_pages>>3;
-    memset(page_bit_map, 0, bit_map_size); 
+    memset(page_bit_map, 0, bit_map_size);
 
     kmalloc_initialize(current_ram_offset, 0x4000);
     current_ram_offset += 0x4000;

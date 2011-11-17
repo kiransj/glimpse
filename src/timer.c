@@ -8,11 +8,11 @@
 
 static void keyboard_callback(registers_t regs)
 {
-    UNUSED_PARAMETER(regs);    
+    UNUSED_PARAMETER(regs);
     uint8_t scan_code = inb(0x60);
 
     if((scan_code & 128) == 128)
-    {        
+    {
         printf("\nkey_released code : %d\n", scan_code);
     }
     else

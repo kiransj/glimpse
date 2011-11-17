@@ -29,7 +29,7 @@ void memset(void *buffer, uint8_t ch, uint32_t size)
     if(0 == ch)
     {
         setToZero(buffer, size);
-    
+
     }
     else
     {
@@ -78,5 +78,5 @@ uint32_t strcpy(char *dest, char *src)
         i++;
     }
     dest[i] = '\0';
-    return i;   
+    return i;
 }
