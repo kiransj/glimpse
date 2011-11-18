@@ -58,7 +58,7 @@ void enable_paging(void)
 
 #define PAGE_PRESENT        0x1
 #define PAGE_RW             0x2
-#define USER_MODE_PAGE      0x4
+#define PAGE_USER_MODE      0x4
 
 void page_fault(registers_t regs);
 
@@ -71,8 +71,9 @@ Page_Directory PageDirectory_Create(void)
     return PD;
 }
 
-void PageDirectory_MapAddress(Page_Directory PD, uint32_t logical_address, uint32_t physical_address)
+void PageDirectory_MapAddress(Page_Directory PD, uint32_t logical_address, uint32_t physical_address, bool user)
 {
+    uint32_t flags = (PAGE_PRESENT | PAGE_RW | (user? PAGE_USER_MODE : 0));
     uint32_t page_number = (logical_address >> 12) & 0x3FF;
     uint32_t page_table = (logical_address >> 22) & 0x3FF;
 
@@ -81,18 +82,18 @@ void PageDirectory_MapAddress(Page_Directory PD, uint32_t logical_address, uint3
         uint32_t table_address = get_page();
         uint32_t *pt = (uint32_t*)table_address;
         /*Set the PRESENT and rw bit*/
-        PD->pd[page_table] = table_address | (PAGE_PRESENT | PAGE_RW);
-        PageDirectory_MapAddress(PD, table_address, table_address);
+        PD->pd[page_table] = table_address | flags;
+        PageDirectory_MapAddress(PD, table_address, table_address, false);
 
     
         memset(pt, 0, 4096);
         /*Add the currently allocated page back to PageTable*/
-        pt[page_number] = (physical_address & ~(0xFFF)) | (PAGE_PRESENT | PAGE_RW);
+        pt[page_number] = (physical_address & ~(0xFFF)) | flags;
     }
     else
     {
         uint32_t *pt = (uint32_t*)(PD->pd[page_table] & 0xFFFFF000);
-        pt[page_number] = (physical_address & ~(0xFFF)) | (PAGE_PRESENT | PAGE_RW);
+        pt[page_number] = (physical_address & ~(0xFFF)) | flags;
     }
 }
 uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
@@ -125,7 +126,7 @@ uint32_t get_mapped_page(uint32_t size)
         while(size > 0)
         {
             uint32_t phy_address = get_page();
-            PageDirectory_MapAddress(currentDirectory, currentDirectory->heap_allocate_address, phy_address);
+            PageDirectory_MapAddress(currentDirectory, currentDirectory->heap_allocate_address, phy_address, false);
             currentDirectory->heap_allocate_address += 0x1000;
             size -= 0x1000;
         }
@@ -171,13 +172,13 @@ void initialise_virtual_paging(uint32_t ram_size)
     /*Map the first One MB*/
     for(address = 0; address < 0x100000; address += get_page_size())
     {
-        PageDirectory_MapAddress(page_directory, address, address);
+        PageDirectory_MapAddress(page_directory, address, address, false);
     }
 
     /*Now Map the allocated memory*/
     for(address = 0x100000; check_if_address_allocated(address); address += get_page_size())
     {
-        PageDirectory_MapAddress(page_directory, address, address);
+        PageDirectory_MapAddress(page_directory, address, address, false);
     }
 
     kernel_directory = page_directory;

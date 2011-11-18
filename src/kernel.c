@@ -5,7 +5,7 @@
 #include <paging.h>
 #include <schedule.h>
 #include <asm.h>
-#define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
+#include <malloc.h>
 
 
 extern uint32_t timer_ticks;
@@ -37,13 +37,12 @@ int my_thread_sleep(void)
     uint32_t num = 0;
     while(1)
     {
-        sleep(1000);
+        sleep(100);
         if(num == 10)
             break;
-    //printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
+    printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
-    printf("Ending thread %d\n", get_pid());
-    print_mem_list();
+    printf("Ending thread %d\n", get_pid());    
     return get_pid();
 }
 int my_thread_nosleep(void)
@@ -51,33 +50,26 @@ int my_thread_nosleep(void)
     uint32_t num = 0;
     while(1)
     {
-        sleep(300);
+        sleep(30);
         if(num == 10)
             break;
-      //  printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
+        printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
     return get_pid();
 }
 
 int main_thread(void)
 {
-   sleep(1000);
-   CLEAR_INTERRUPT();
-   print_ktask_list();
-   while(1);
+   sleep(5000);
    return 0;
 }
 void kernel_entry(struct multiboot *mbd, uint32_t esp)
 {
 	CLEAR_INTERRUPT();
-    uint32_t current_stack = 0;
-    UNUSED_PARAMETER(mbd);
     UNUSED_PARAMETER(esp);
     clear_screen();
 
     init_descriptor_tables();
-
-    GET_ESP(current_stack);
 
     uint32_t count = mbd->mmap_length/sizeof(struct memory_map), i;
     struct memory_map *map = (struct memory_map *)mbd->mmap_addr;
@@ -110,8 +102,9 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     kthread_create(my_thread_nosleep, "thread3");
 
     kthread_create(my_thread_sleep, "thread1");
+    kthread_create(main_thread, "main_thread");
 
-#if 1
+#if 0 
     kernel_main();
     while(1);
 #endif

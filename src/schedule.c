@@ -43,13 +43,13 @@ struct _task *task_list;
 
 void print_ktask_list(void)
 {
-    struct _task *task = current_task;
+    struct _task *task = task_list;
     do
     {
         printf("Pid(%d), state(%d), total_time(%d ms), name(%s)\n", task->pid, task->state, task->total_cycles*10, task->threadName);
         task = task->next;
     }
-    while(task != current_task);
+    while(task != NULL);
 
     return ;
 }
@@ -79,6 +79,7 @@ void sleep(uint32_t milliSeconds)
 void remove_task(struct _task *task)
 {
     struct _task *tmp;
+    
     printf("Task '%s' ended with returnValue : %d\n", task->threadName, task->returnValue);
     tmp = task->prev;
     tmp->next = task->next;
@@ -88,7 +89,10 @@ void remove_task(struct _task *task)
     /*Free the stack allocated*/
     free_mapped_page(task->stack_address, task->stack_size);
     /*Delete the task*/
-    kfree(task);
+    kfree(task);    
+
+
+    print_ktask_list();
 }
 /*These 2 functions are called with interrupt disabled.
  * These two should not be called from C*/
