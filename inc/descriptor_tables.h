@@ -1,4 +1,4 @@
-// 
+//
 // descriptor_tables.h - Defines the interface for initialising the GDT and IDT.
 //                       Also defines needed structures.
 //                       Based on code from Bran's kernel development tutorials.

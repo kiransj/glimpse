@@ -4,7 +4,6 @@
 #define ENABLE_INTERRUPT()    asm volatile ("sti");
 #define CLEAR_INTERRUPT()     asm volatile ("cli");
 
-#define GET_ESP(x)  asm volatile("mov %%esp, %0": "=r"(x))
-
+#define yeild()               asm volatile("int $0x80");
 
 #endif

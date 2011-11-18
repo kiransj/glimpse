@@ -5,4 +5,5 @@
 void kmalloc_initialize(const uint32_t addre, const uint32_t size);
 void kfree(void *addr);
 void* kmalloc(const uint32_t size);
+void print_mem_list(void);
 #endif

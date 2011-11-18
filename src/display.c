@@ -20,7 +20,7 @@ void clear_screen(void)
 }
 
 void put_char(char ch)
-{    
+{
     if(row == NUM_OF_ROWS)
     {
         scroll();
@@ -28,7 +28,7 @@ void put_char(char ch)
     }
     if('\n' == ch)
     {
-        row++;   
+        row++;
         col = 0;
     }
     else if('\r' == ch)
@@ -38,8 +38,8 @@ void put_char(char ch)
     else
     {
         uint32_t current_position = (row * NUM_OF_COLUMNS + col)*2;
-        videoram[current_position] = ch; 
-        videoram[current_position+1] = 0x17; 
+        videoram[current_position] = ch;
+        videoram[current_position+1] = 0x17;
         col++;
         if(col == NUM_OF_COLUMNS)
         {
@@ -63,7 +63,7 @@ void scroll(void)
 
     start_offset = NUM_OF_COLUMNS * 2 * (NUM_OF_ROWS-1);
     screen_size = (NUM_OF_ROWS) * NUM_OF_COLUMNS * 2;
-   
+
     for(i = start_offset; i < screen_size; i++)
     {
         videoram[i] = 0;
@@ -78,7 +78,7 @@ uint32_t write_string(char *string)
     {
         put_char(string[i]);
         i++;
-    }      
+    }
     return i;
 }
 
@@ -90,8 +90,8 @@ void print_uint32(uint32_t num, uint32_t base)
     do
     {
         uint32_t rem = tmp % base;
-        
-        if(rem < 10)            
+
+        if(rem < 10)
             number[i++] = '0' + rem;
         else if(rem >= 10)
             number[i++] = 'A' + (rem - 10);
@@ -115,7 +115,7 @@ void print_uint32(uint32_t num, uint32_t base)
 
 void print_int(int num)
 {
-    int tmp = num;    
+    int tmp = num;
 
     if(tmp < 0)
     {
@@ -145,7 +145,7 @@ uint32_t printf(char *format, ...)
                         print_int(tmp);
                         break;
                     }
-                case 'u': 
+                case 'u':
                     {
                         uint32_t tmp;
                         tmp = va_arg(ap, uint32_t);
@@ -176,7 +176,7 @@ uint32_t printf(char *format, ...)
                         put_char(ch);
                         break;
                     }
-                case NULL:  
+                case NULL:
                 default:
                     goto END;
             }
@@ -189,5 +189,5 @@ uint32_t printf(char *format, ...)
     }
 END:
     va_end(ap);
-    return 0;    
+    return 0;
 }
