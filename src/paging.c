@@ -56,20 +56,18 @@ void enable_paging(void)
  * frame   : 20
 */
 
+#define PAGE_PRESENT        0x1
+#define PAGE_RW             0x2
+#define USER_MODE_PAGE      0x4
+
 void page_fault(registers_t regs);
 
 Page_Directory PageDirectory_Create(void)
 {
-    uint32_t i =0 ;
     Page_Directory PD = (Page_Directory)kmalloc(sizeof(struct __page_directory));
     PD->pd = (PageDirectory)get_page();
     PD->heap_allocate_address = PD->num_of_pages_freed = 0;
-    /*Assume page size is 4096*/
-    for(i = 0; i < 1024; i++)
-    {
-        /*Set Not Preset bit*/
-        PD->pd[i] = 0x2;
-    }
+    memset(PD->pd, 0, 4096);
     return PD;
 }
 
@@ -78,28 +76,23 @@ void PageDirectory_MapAddress(Page_Directory PD, uint32_t logical_address, uint3
     uint32_t page_number = (logical_address >> 12) & 0x3FF;
     uint32_t page_table = (logical_address >> 22) & 0x3FF;
 
-    if(PD->pd[page_table] == 0x2)
+    if(PD->pd[page_table] == 0x0)
     {
-        uint32_t table_address = get_page(), i;
+        uint32_t table_address = get_page();
         uint32_t *pt = (uint32_t*)table_address;
         /*Set the PRESENT and rw bit*/
-        PD->pd[page_table] = table_address | 0x3;
+        PD->pd[page_table] = table_address | (PAGE_PRESENT | PAGE_RW);
         PageDirectory_MapAddress(PD, table_address, table_address);
 
-        /*Assume page size is 4096*/
-        for(i = 0; i < 1024; i++)
-        {
-            /*Set Not Preset bit*/
-            pt[i] = 0x2;
-        }
-
+    
+        memset(pt, 0, 4096);
         /*Add the currently allocated page back to PageTable*/
-        pt[page_number] = (physical_address & ~(0xFFF)) | 0x3;
+        pt[page_number] = (physical_address & ~(0xFFF)) | (PAGE_PRESENT | PAGE_RW);
     }
     else
     {
         uint32_t *pt = (uint32_t*)(PD->pd[page_table] & 0xFFFFF000);
-        pt[page_number] = (physical_address & ~(0xFFF)) | 0x3;
+        pt[page_number] = (physical_address & ~(0xFFF)) | (PAGE_PRESENT | PAGE_RW);
     }
 }
 uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
@@ -108,7 +101,7 @@ uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
     uint32_t page_number = (address >> 12) & 0x3FF;
     uint32_t page_table = (address >> 22) & 0x3FF;
 
-    if(PD->pd[page_table] == 0x2)
+    if(PD->pd[page_table] == 0x0)
     {
         LOG_WARN("trying to unmap addressi %x which is not allocated", address);
     }
@@ -116,7 +109,7 @@ uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
     {
         uint32_t *pt = (uint32_t*)(PD->pd[page_table] & 0xFFFFF000);
         phy_address = pt[page_number] & ~(0xFFF);
-        pt[page_number] = 0x2;
+        pt[page_number] = 0x0;
         PD->num_of_pages_freed++;
     }
     return phy_address;
@@ -124,7 +117,6 @@ uint32_t PageDirectory_UnMapAddress(Page_Directory PD, uint32_t address)
 
 uint32_t get_mapped_page(uint32_t size)
 {
-	CLEAR_INTERRUPT();
     uint32_t logical_address;
     if((size & 0xFFF) == 0)
     {
@@ -143,13 +135,12 @@ uint32_t get_mapped_page(uint32_t size)
         LOG_ERROR("size should be multiple for 4096");
         logical_address = 0;
     }
-	ENABLE_INTERRUPT();
     return logical_address;
 }
 
 void free_mapped_page(uint32_t address, uint32_t size)
 {
-	CLEAR_INTERRUPT();
+    FN_ENTRY();
     if((size & 0xFFF) == 0)
     {
         uint32_t phyaddress;
@@ -165,7 +156,7 @@ void free_mapped_page(uint32_t address, uint32_t size)
     {
         LOG_ERROR("size should be multiple for 4096");
     }
-	ENABLE_INTERRUPT();
+    FN_EXIT();
     return;
 }
 

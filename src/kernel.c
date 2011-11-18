@@ -26,6 +26,7 @@ int kernel_main(void)
 
     free_mapped_page((uint32_t)address, sizeof(uint32_t) * 0x2000);
 
+    print_mem_list();
     LOG_INFO("done");
     FN_EXIT();
     return 0;
@@ -36,23 +37,26 @@ int my_thread_sleep(void)
     uint32_t num = 0;
     while(1)
     {
-        sleep(10);
+        sleep(1000);
         if(num == 10)
             break;
-        printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
+    //printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
     printf("Ending thread %d\n", get_pid());
-    return 0;
+    print_mem_list();
+    return get_pid();
 }
 int my_thread_nosleep(void)
 {
     uint32_t num = 0;
     while(1)
     {
-        sleep(100);
-        printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
+        sleep(300);
+        if(num == 10)
+            break;
+      //  printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
-    return 0;
+    return get_pid();
 }
 
 int main_thread(void)
@@ -100,19 +104,14 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     initialize_scheduling();
 
     ENABLE_INTERRUPT();
-    
+
 
     kthread_create(my_thread_nosleep, "thread2");
     kthread_create(my_thread_nosleep, "thread3");
-    
+
     kthread_create(my_thread_sleep, "thread1");
-    while(1)
-    {
-        printf("main thread : %d\n", get_pid());
-        uint32_t wake_up = timer_ticks + 100;
-        while(wake_up > timer_ticks);
-    }
-#if 0 
+
+#if 1
     kernel_main();
     while(1);
 #endif

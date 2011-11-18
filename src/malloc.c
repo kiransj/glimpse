@@ -210,10 +210,10 @@ void print_mem_list(void)
 	while(NULL != list)
 	{
 		BlockHeader tmp = list->block;
-		LOG_INFO("<-MemList : MainBlock(%d), address(%d), size(%d) ->\n", list->mainBlock, list->block_starting_address, list->size);
+		LOG_WARN("<-MemList : MainBlock(%d), address(%d), size(%d) ->\n", list->mainBlock, list->block_starting_address, list->size);
 		while(NULL != tmp)
 		{
-			LOG_INFO("\t<-BlockList: Address(%d), size(%d), flag(%d) ->\n", tmp->address, tmp->size, tmp->flags);
+			LOG_WARN("\t<-BlockList: Address(%d), size(%d), flag(%d) ->\n", tmp->address, tmp->size, tmp->flags);
 			tmp = tmp->next;
 		}
 		list = list->next;
