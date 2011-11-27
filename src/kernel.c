@@ -38,9 +38,9 @@ int my_thread_sleep(void)
     while(1)
     {
         sleep(1000);
-        if(num == 10)
+        if(num == 2)
             break;
-    //printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
+       printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
     printf("Ending thread %d\n", get_pid());
     print_mem_list();
@@ -52,18 +52,22 @@ int my_thread_nosleep(void)
     while(1)
     {
         sleep(300);
-        if(num == 10)
+        if(num == 2)
             break;
-      //  printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
+        printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
+    CLEAR_INTERRUPT();
+    print_ktask_list();
+	ENABLE_INTERRUPT();
     return get_pid();
 }
 
 int main_thread(void)
 {
-   sleep(1000);
+   sleep(4000);
    CLEAR_INTERRUPT();
    print_ktask_list();
+   printf("\n\n\n\n*****The End*********\n\n");
    while(1);
    return 0;
 }
@@ -110,8 +114,9 @@ void kernel_entry(struct multiboot *mbd, uint32_t esp)
     kthread_create(my_thread_nosleep, "thread3");
 
     kthread_create(my_thread_sleep, "thread1");
+    kthread_create(main_thread, "main_thread");
 
-#if 1
+#if 0 
     kernel_main();
     while(1);
 #endif

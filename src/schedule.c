@@ -38,23 +38,24 @@ struct _task
     uint32_t returnValue;
 };
 
+#define NUM_CYCLES_PER_SECOND	50
 struct _task *current_task;
 struct _task *task_list;
 
 void print_ktask_list(void)
 {
-    struct _task *task = current_task;
+    struct _task *task = task_list;
     do
     {
         printf("Pid(%d), state(%d), total_time(%d ms), name(%s)\n", task->pid, task->state, task->total_cycles*10, task->threadName);
         task = task->next;
     }
-    while(task != current_task);
+    while(task != NULL);
 
     return ;
 }
 
-#define NUM_CYCLES(x) (x)
+#define NUM_CYCLES(x) ((x)*NUM_CYCLES_PER_SECOND)/1000
 void sleep(uint32_t milliSeconds)
 {
     uint32_t cycles = NUM_CYCLES(milliSeconds);
@@ -65,7 +66,6 @@ void sleep(uint32_t milliSeconds)
         current_task->wake_up_cycle = timer_ticks + cycles;
         ENABLE_INTERRUPT();
         yeild();
-//        asm volatile("int $0x80");
     }
     else
     {
@@ -121,6 +121,11 @@ uint32_t schedule(uint32_t esp)
                         current_task->wake_up_cycle = 0;
                         current_task->state = TASK_STATE_RUNNING;
                     }
+					else
+					{
+						printf("Thread  %d Sleeping\n", current_task->pid);
+					}
+
                     break;
                 case TASK_STATE_NOT_STARTED:
                     {
@@ -174,7 +179,7 @@ void initialize_scheduling(void)
    scheduling_initialzed = 1;
 
     /*Start the timer 1 milli seconds*/
-    init_timer(1000);
+    init_timer(NUM_CYCLES_PER_SECOND);
 }
 
 uint32_t get_pid(void)
