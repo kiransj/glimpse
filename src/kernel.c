@@ -40,7 +40,8 @@ int my_thread_sleep(void)
         sleep(100);
         if(num == 10)
             break;
-    printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
+    	printf("Sleep:Thread Id : %d, %d\n", get_pid(), num++);
+
     }
     printf("Ending thread %d\n", get_pid());    
     return get_pid();
@@ -55,12 +56,19 @@ int my_thread_nosleep(void)
             break;
         printf("NoSleep:Thread Id : %d, %d\n", get_pid(), num++);
     }
+    CLEAR_INTERRUPT();
+    print_ktask_list();
+	ENABLE_INTERRUPT();
     return get_pid();
 }
 
 int main_thread(void)
 {
    sleep(5000);
+   CLEAR_INTERRUPT();
+   print_ktask_list();
+   printf("\n\n\n\n*****The End*********\n\n");
+   while(1);
    return 0;
 }
 void kernel_entry(struct multiboot *mbd, uint32_t esp)
