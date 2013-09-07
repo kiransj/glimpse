@@ -1,6 +1,6 @@
 ASSEMBLER=nasm
 CC=gcc
-LD=ld
+LD=ld -m elf_i386 
 
 include src.mk
 
@@ -9,7 +9,7 @@ OBJECTS += $(C_SOURCES:.c=.o)
 
 INCLUDES := -I./inc
 
-CFLAGS := -Wall -Wextra  -Werror -nostdlib #-DDEBUG
+CFLAGS := -m32 -Wall -Wextra  -Werror -nostdlib #-DDEBUG
 CFLAGS += -fno-builtin -nostartfiles -nodefaultlibs
 
 KERNEL := output/kernel.bin
