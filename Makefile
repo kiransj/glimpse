@@ -32,4 +32,4 @@ clean:
 	rm -f $(OBJECTS) $(KERNEL)
 
 run: $(KERNEL)
-	cd output && ./update_image.sh && qemu -no-kvm -m 64  -fda floppy.img 
+	cd output && ./update_image.sh && qemu-system-i386 -no-kvm -m 64  -fda floppy.img 
