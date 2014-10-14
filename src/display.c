@@ -39,7 +39,7 @@ void put_char(char ch)
     {
         uint32_t current_position = (row * NUM_OF_COLUMNS + col)*2;
         videoram[current_position] = ch;
-        videoram[current_position+1] = 0x17;
+        videoram[current_position+1] = 0x0F;
         col++;
         if(col == NUM_OF_COLUMNS)
         {
